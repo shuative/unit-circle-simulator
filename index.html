@@ -9,8 +9,8 @@
       --green  : #34c759;
       --orange : #ff9f0a;
       --red    : #ff3b30;
-      --pos    : #ff3b30;
-      --neg    : #0A84FF;
+      --pos    : #ff3b30;  /* 正の値を赤に */
+      --neg    : #0A84FF;  /* 負の値を青に */
     }
 
     body{
@@ -52,7 +52,7 @@
 
     <div class="controls">
       <label for="angleRange">θ:</label>
-      <input id="angleRange" type="range"  min="0" max="360" step="1" value="0">
+      <input id="angleRange" type="range" min="0" max="360" step="1" value="0">
       <input id="angleInput" type="number" min="0" max="360" step="1" value="0">
       <span>°</span>
       <button id="toggleAuto">Auto ▶</button>
@@ -97,6 +97,7 @@ const toRad = deg => deg * Math.PI / 180;
 function draw(){
   ctx.clearRect(0,0,W,H);
 
+  /* 座標軸 */
   ctx.strokeStyle = '#888888';
   ctx.lineWidth = 2;
   ctx.beginPath();
@@ -104,6 +105,7 @@ function draw(){
   ctx.moveTo(C.x, 0  ); ctx.lineTo(C.x, H);
   ctx.stroke();
 
+  /* ラベルと ±1 表示 */
   ctx.fillStyle = '#444';
   ctx.font = '16px sans-serif';
   ctx.textAlign = 'right';  ctx.fillText('O', C.x-6, C.y+22);
@@ -116,6 +118,7 @@ function draw(){
   ctx.fillText('1',  C.x-14, C.y-R-off+4);
   ctx.fillText('-1', C.x-14, C.y+R+off);
 
+  /* 単位円（グレー） */
   ctx.strokeStyle = '#888888';
   ctx.lineWidth = 2;
   ctx.beginPath(); ctx.arc(C.x, C.y, R, 0, Math.PI*2); ctx.stroke();
@@ -125,6 +128,7 @@ function draw(){
   const cosV = Math.cos(theta);
   const sinV = Math.sin(theta);
 
+  /* 点 P から各軸への垂線（破線） */
   ctx.strokeStyle = css('--orange');
   ctx.setLineDash([5,4]);
   ctx.beginPath();
@@ -133,6 +137,7 @@ function draw(){
   ctx.stroke();
   ctx.setLineDash([]);
 
+  /* 原点から x 軸 / y 軸 への線分を符号で色分け */
   ctx.lineWidth   = 2;
   ctx.strokeStyle = cosV >= 0 ? css('--pos') : css('--neg');
   ctx.beginPath(); ctx.moveTo(C.x, C.y); ctx.lineTo(Px, C.y); ctx.stroke();
@@ -140,35 +145,41 @@ function draw(){
   ctx.strokeStyle = sinV >= 0 ? css('--pos') : css('--neg');
   ctx.beginPath(); ctx.moveTo(C.x, C.y); ctx.lineTo(C.x, Py); ctx.stroke();
 
+  /* 原点から点 P への半径線 */
   ctx.strokeStyle = css('--green'); ctx.lineWidth = 2;
   ctx.beginPath(); ctx.moveTo(C.x, C.y); ctx.lineTo(Px, Py); ctx.stroke();
 
+  /* 角度を示す弧（0 → θ） */
   ctx.strokeStyle = css('--green'); ctx.lineWidth = 3;
   ctx.beginPath(); ctx.arc(C.x, C.y, rArc, 0, -theta, true); ctx.stroke();
 
+  /* 角度ラベル */
   const mid = theta/2;
   ctx.fillStyle = css('--green'); ctx.font = '18px sans-serif'; ctx.textAlign='center';
   ctx.fillText(`${Math.round(toDeg(theta))}°`,
                C.x + (rArc+15)*Math.cos(mid),
                C.y - (rArc+15)*Math.sin(mid));
 
+  /* 点 P 本体 */
   ctx.fillStyle = css('--red');
   ctx.beginPath(); ctx.arc(Px, Py, 6, 0, Math.PI*2); ctx.fill();
 
+  /* cos / sin 表示 (キャンバス内) */
   const deg = Math.round(toDeg(theta));
   ctx.font = '18px sans-serif';
 
   ctx.fillStyle = cosV >= 0 ? css('--pos') : css('--neg');
   ctx.textAlign = 'center';
-  ctx.fillText(`cos${deg}\u00B0=${cosV.toFixed(2)}`, Px, C.y+22);
+  ctx.fillText(`cos${deg}°=${cosV.toFixed(2)}`, Px, C.y+22);
 
   ctx.fillStyle = sinV >= 0 ? css('--pos') : css('--neg');
   ctx.textAlign = 'left';
-  ctx.fillText(`sin${deg}\u00B0=${sinV.toFixed(2)}`, C.x+12, Py-6);
+  ctx.fillText(`sin${deg}°=${sinV.toFixed(2)}`, C.x+12, Py-6);
 
+  /* 下部の出力欄 */
   outTxt.innerHTML =
-    `cos${deg}\u00B0 = <span style="color:${cosV>=0?css('--pos'):css('--neg')}">${cosV.toFixed(3)}</span>, ` +
-    `sin${deg}\u00B0 = <span style="color:${sinV>=0?css('--pos'):css('--neg')}">${sinV.toFixed(3)}</span>`;
+    `cos${deg}° = <span style="color:${cosV>=0?css('--pos'):css('--neg')}">${cosV.toFixed(3)}</span>, ` +
+    `sin${deg}° = <span style="color:${sinV>=0?css('--pos'):css('--neg')}">${sinV.toFixed(3)}</span>`;
 }
 
 function setAngleRad(rad){
@@ -180,8 +191,9 @@ function setAngleRad(rad){
 }
 const setAngleDeg = deg => setAngleRad(toRad(deg));
 
-function setSpeed(v){ speed = v; speedD.textContent = `${v.toFixed(1)}\u00d7`; }
+function setSpeed(v){ speed = v; speedD.textContent = `${v.toFixed(1)}×`; }
 
+/* 1度刻みでスライダー・入力フォームを連動させる */
 rangeA.addEventListener('input', e => setAngleDeg(parseInt(e.target.value,10)));
 inputA.addEventListener('input', e => setAngleDeg(parseInt(e.target.value,10)));
 rangeS.addEventListener('input', e => setSpeed(parseFloat(e.target.value)));
@@ -206,6 +218,7 @@ btnAuto.addEventListener('click', ()=>{
   if(auto) requestAnimationFrame(loop);
 });
 
+/* ドラッグ用座標変換 */
 function pos(e){
   const r = canvas.getBoundingClientRect();
   return {
@@ -242,6 +255,7 @@ window.addEventListener('touchmove', moveDrag, {passive:false});
 window.addEventListener('mouseup',   endDrag);
 window.addEventListener('touchend',  endDrag);
 
+/* 初期値 */
 setSpeed(1);
 setAngleDeg(0);
 </script>
